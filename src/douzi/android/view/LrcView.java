@@ -31,7 +31,7 @@ public class LrcView extends View implements ILrcView{
 
 	private List<LrcRow> mLrcRows; 	// all lrc rows of one lrc file
 	private int mMinSeekFiredOffset = 10; // min offset for fire seek action, px;
-	private int mHignlightRow = 0;   // current singing row , should be highlighted.
+	private int mHighlightRow = 0;   // current singing row , should be highlighted.
 	private int mHignlightRowColor = Color.YELLOW; 
 	private int mNormalRowColor = Color.WHITE;
 	private int mSeekLineColor = Color.CYAN;
@@ -50,6 +50,76 @@ public class LrcView extends View implements ILrcView{
 	private String mLoadingLrcTip = "Downloading lrc...";
 	
 	private Paint mPaint;
+	
+	public static final class SetupWizard {
+		private static final int NOT_SET = Integer.MAX_VALUE;
+		private int mHignlightRowColor = NOT_SET; 
+		private int mNormalRowColor = NOT_SET;
+		private int mSeekLineColor = NOT_SET;
+		private int mSeekLineTextColor = NOT_SET;
+		private int mSeekLineTextSize = NOT_SET;
+		private int mLrcFontSize = NOT_SET;
+		private int mPaddingY = NOT_SET;
+		
+		public SetupWizard hignlightRowColor(int color) {
+			mHignlightRowColor = color;
+			return this;
+		}
+		
+		public SetupWizard normalRowColor(int color) {
+			mNormalRowColor = color;
+			return this;
+		}
+		
+		public SetupWizard seekLineColor(int color) {
+			mSeekLineColor = color;
+			return this;
+		}
+		
+		public SetupWizard seekLineTextColor(int color) {
+			mSeekLineTextColor = color;
+			return this;
+		}
+		
+		public SetupWizard seekLineTextSize(int size) {
+			mSeekLineTextSize = size;
+			return this;
+		}
+		
+		public SetupWizard lrcFontSize(int size) {
+			mLrcFontSize = size;
+			return this;
+		}
+		
+		public SetupWizard paddingY(int padding) {
+			mPaddingY = padding;
+			return this;
+		}
+		
+		public void setup(LrcView view) {
+			if(mHignlightRowColor != NOT_SET) {
+				view.mHignlightRowColor = this.mHignlightRowColor;
+			}
+			if(mNormalRowColor != NOT_SET) {
+				view.mNormalRowColor = this.mNormalRowColor;
+			}
+			if(mSeekLineColor != NOT_SET) {
+				view.mSeekLineColor = this.mSeekLineColor;
+			}
+			if(mSeekLineTextColor != NOT_SET) {
+				view.mSeekLineTextColor = this.mSeekLineTextColor;
+			}
+			if(mSeekLineTextSize != NOT_SET) {
+				view.mSeekLineTextSize = this.mSeekLineTextSize;
+			}
+			if(mLrcFontSize != NOT_SET) {
+				view.mLrcFontSize = this.mLrcFontSize;
+			}
+			if(mPaddingY != NOT_SET) {
+				view.mPaddingY = this.mPaddingY;
+			}
+		}
+	}
 	
 	public LrcView(Context context,AttributeSet attr){
 		super(context,attr);
@@ -89,7 +159,7 @@ public class LrcView extends View implements ILrcView{
 		// 3, draw rows below highlight row.
 		
 		// 1 highlight row
-		String highlightText = mLrcRows.get(mHignlightRow).content;
+		String highlightText = mLrcRows.get(mHighlightRow).content;
 		int highlightRowY = height / 2 - mLrcFontSize;
 		mPaint.setColor(mHignlightRowColor);
 		mPaint.setTextSize(mLrcFontSize);
@@ -103,14 +173,14 @@ public class LrcView extends View implements ILrcView{
 			mPaint.setColor(mSeekLineTextColor);
 			mPaint.setTextSize(mSeekLineTextSize);
 			mPaint.setTextAlign(Align.LEFT);
-			canvas.drawText(mLrcRows.get(mHignlightRow).strTime, 0, highlightRowY, mPaint);
+			canvas.drawText(mLrcRows.get(mHighlightRow).strTime, 0, highlightRowY, mPaint);
 		}
 		
 		// 2 above rows
 		mPaint.setColor(mNormalRowColor);
 		mPaint.setTextSize(mLrcFontSize);
 		mPaint.setTextAlign(Align.CENTER);
-		rowNum = mHignlightRow - 1;
+		rowNum = mHighlightRow - 1;
 		rowY = highlightRowY - mPaddingY - mLrcFontSize;
 		while( rowY > -mLrcFontSize && rowNum >= 0){
 			String text = mLrcRows.get(rowNum).content;
@@ -120,7 +190,7 @@ public class LrcView extends View implements ILrcView{
 		}
 		
 		// 3 below rows
-		rowNum = mHignlightRow + 1;
+		rowNum = mHighlightRow + 1;
 		rowY = highlightRowY + mPaddingY + mLrcFontSize;
 		while( rowY < height && rowNum < mLrcRows.size()){
 			String text = mLrcRows.get(rowNum).content;
@@ -135,7 +205,7 @@ public class LrcView extends View implements ILrcView{
 	        return;
 	    }
 		LrcRow lrcRow = mLrcRows.get(position);
-		mHignlightRow = position;
+		mHighlightRow = position;
 		invalidate();
 		if(mLrcViewListener != null){
 			mLrcViewListener.onLrcSeeked(position, lrcRow);
@@ -181,7 +251,7 @@ public class LrcView extends View implements ILrcView{
 		case MotionEvent.ACTION_CANCEL:
 		case MotionEvent.ACTION_UP:
 			if(mDisplayMode == DISPLAY_MODE_SEEK){
-				seekLrc(mHignlightRow);
+				seekLrc(mHighlightRow);
 			}
 			mDisplayMode = DISPLAY_MODE_NORMAL;
 			invalidate();
@@ -222,16 +292,16 @@ public class LrcView extends View implements ILrcView{
 		}
 		mDisplayMode = DISPLAY_MODE_SEEK;
 		int rowOffset = Math.abs((int) offsetY / mLrcFontSize); // highlight row offset. 
-		Log.d(TAG, "move new hightlightrow : " + mHignlightRow + " offsetY: " + offsetY + " rowOffset:" + rowOffset);
+		Log.d(TAG, "move new hightlightrow : " + mHighlightRow + " offsetY: " + offsetY + " rowOffset:" + rowOffset);
 		if(offsetY < 0){
 			// finger move up
-			mHignlightRow += rowOffset;
+			mHighlightRow += rowOffset;
 		}else if(offsetY > 0){
 			// finger move down
-			mHignlightRow -= rowOffset;
+			mHighlightRow -= rowOffset;
 		}
-		mHignlightRow = Math.max(0, mHignlightRow);
-		mHignlightRow = Math.min(mHignlightRow, mLrcRows.size() - 1);
+		mHighlightRow = Math.max(0, mHighlightRow);
+		mHighlightRow = Math.min(mHighlightRow, mLrcRows.size() - 1);
 		
 		if(rowOffset > 0){
 			mLastMotionY = y;
@@ -288,6 +358,7 @@ public class LrcView extends View implements ILrcView{
 	}
 
     public void setLrc(List<LrcRow> lrcRows) {
+    	mHighlightRow = 0;
         mLrcRows = lrcRows;
         invalidate();
     }
